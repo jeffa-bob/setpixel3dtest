@@ -1,0 +1,3 @@
+[submodule "teststuff"]
+	path = teststuff
+	url = https://github.com/jeffa-bob/teststuff.git
