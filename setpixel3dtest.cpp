@@ -106,14 +106,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    {
       return FALSE;
    }
-   SetWindowPos(hWnd, HWND_TOP, 200, 200, 600, 600, SWP_NOMOVE);
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
    world::currentworld newworld;
-   newworld.light = { {0,0,0},{166,166,166},20 };
-   newworld.sphereworld.push_back({ {0,20,0},3,{70,139,72} });
+   newworld.light = { {0,20,10},{255,255,255},5 };
+   SetWindowPos(hWnd, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
+   newworld.sphereworld.push_back({ {0,20,0},5,{0,255,0} });
    newworld.window = GetDC(hWnd);
    newworld.renderscreen();
 

@@ -38,7 +38,7 @@ namespace world
     _3dpos pos;
     color col;
     //brightness is distance to check for the lightsource for shading
-    float brightness;
+    int brightness;
   };
   // camera view
   struct camera
@@ -55,6 +55,7 @@ namespace world
   struct mesh
   {
     std::vector<tri> mesh;
+    //the area around the mesh where pixels will check exactly which triangles to check for
     sphere checkbox;
   };
 
@@ -127,7 +128,7 @@ namespace world
   //returns median of centrion of all tris in a mesh
   _3dpos centerofmesh(mesh current)
   {
-    _3dpos final = {0,0,0};
+    _3dpos final = { 0,0,0 };
     for (tri curtri : current.mesh)
     {
       final.x += centeroftri(curtri).x;
@@ -143,16 +144,13 @@ namespace world
   //returns true if the end of a ray collids with a sphere;
   bool rayspherecollision(_3dpos rays, sphere sph)
   {
-    bool x = rays.x < sph.pos.x + sph.radius && rays.x > sph.pos.x - sph.radius;
-    bool y = rays.y < sph.pos.y + sph.radius && rays.y > sph.pos.y - sph.radius;
-    bool z = rays.z < sph.pos.z + sph.radius && rays.z > sph.pos.z - sph.radius;
-    return x && y && z;
+    return pow(rays.x - sph.pos.x, 2) + pow(rays.y - sph.pos.y, 2) + pow(rays.z - sph.pos.z, 2) < pow(sph.radius, 2);
   }
 
   //return the magnitute of a ray in a float, decimal will be rounded
   float magnitudeofaray(ray ray)
   {
-    return (float)sqrt(pow(abs(ray.raypoint[0].x - ray.raypoint[1].x), 2) + pow(abs(ray.raypoint[0].y - ray.raypoint[1].y), 2) + pow(abs(ray.raypoint[0].z - ray.raypoint[1].z), 2));
+    return (float)sqrt(pow(ray.raypoint[0].x - ray.raypoint[1].x, 2) + pow(ray.raypoint[0].y - ray.raypoint[1].y, 2) + pow(ray.raypoint[0].z - ray.raypoint[1].z, 2));
   }
 
   //gives unit vector of a ray as a ray from the first point of the ray
@@ -165,6 +163,11 @@ namespace world
   void rayscaler(ray& rays, float mag) {
     ray unitray = unitvectorofray(rays);
     rays = { {{unitray.raypoint[0]},{unitray.raypoint[1].x * mag,unitray.raypoint[1].y * mag,unitray.raypoint[1].z * mag}} };
+  }
+
+  color shadepoint(ray& rays, color objcolor, lightsource light) {
+    int brightness = 255 * (magnitudeofaray(rays) / light.brightness);
+    return { brightness,brightness,brightness };
   }
 
   //class with list of objects to be rendered onto screen; buildarray function renders scene
@@ -188,6 +191,7 @@ namespace world
     //builds the 2d pixel array of colors and displayes it to the screen
     void renderscreen()
     {
+      //sphereworld.push_back({ light.pos,5,{light.brightness,light.brightness,light.brightness} });
       ray forward = { {{cam.pos},{cam.camdir.raypoint[1].x,cam.camdir.raypoint[1].y + 1,cam.camdir.raypoint[1].z} } };
       ray right = { {{cam.pos},{forward.raypoint[1].y,-forward.raypoint[1].y,forward.raypoint[1].z} } };
       float halfwidth = tan(cam.fov / 2);
@@ -196,15 +200,16 @@ namespace world
         for (int j = 0; j < cam.width; ++j)
         {
           float wideoffset = ((i * 2.0 / (cam.width - 1.0)) - 1.0) * halfwidth;
-          ray curray = { {{cam.pos},{1 * wideoffset,cam.camdir.raypoint[1].y,1 * wideoffset}} };
-          color raycol = willraycollide(curray);
+          float lengthoffset = ((j * 2.0 / (cam.width - 1.0)) - 1.0) * halfwidth;
+          ray curray = { {{cam.pos},{1 * wideoffset,cam.camdir.raypoint[1].y,1 * lengthoffset}} };
+          color raycol = willraycollide(curray, false);
           SetPixel(window, j, i, RGB(raycol.r, raycol.g, raycol.b));
         }
       }
     };
 
     //returns the color of the object the ray collides with else returns black;
-    color willraycollide(ray rays)
+    color willraycollide(ray rays, bool gotosun)
     {
       ray increm = rays;
       rayscaler(increm, 100);
@@ -218,19 +223,14 @@ namespace world
             ray coltolight;
             coltolight.raypoint[0] = increm.raypoint[1];
             coltolight.raypoint[1] = light.pos;
-            if (colorequal(willraycollide(coltolight), { 0, 0, 0 }))
-            {
-              mixcolor(cursph.col, light.col);
-              return cursph.col;
-            }
-            else
-            {
-              mixcolor(cursph.col, { 40,40,40 });
-              return cursph.col;
-            }
+            mixcolor(cursph.col, light.col);
+            return cursph.col;
           }
-        }
-        scalee -= 0.5;
+        }/*
+        for (mesh& curmesh : meshworld) {
+
+        }*/
+        scalee -= 0.25;
         rayscaler(increm, scalee);
       }
       return { 0, 0, 0 };
