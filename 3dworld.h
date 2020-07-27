@@ -1,5 +1,6 @@
 #include <vector>
 #include <array>
+#include <DirectXMath.h>
 #include <cmath>
 
 namespace world
@@ -144,13 +145,13 @@ namespace world
   //returns true if the end of a ray collids with a sphere;
   bool rayspherecollision(_3dpos rays, sphere sph)
   {
-    return pow(rays.x - sph.pos.x, 2) + pow(rays.y - sph.pos.y, 2) + pow(rays.z - sph.pos.z, 2) < pow(sph.radius, 2);
+    return ((rays.x - sph.pos.x) * (rays.x - sph.pos.x)) + ((rays.y - sph.pos.y) * (rays.y - sph.pos.y)) + ((rays.z - sph.pos.z) * (rays.z - sph.pos.z)) < sph.radius * sph.radius;
   }
 
   //return the magnitute of a ray in a float, decimal will be rounded
   float magnitudeofaray(ray ray)
   {
-    return (float)sqrt(pow(ray.raypoint[0].x - ray.raypoint[1].x, 2) + pow(ray.raypoint[0].y - ray.raypoint[1].y, 2) + pow(ray.raypoint[0].z - ray.raypoint[1].z, 2));
+    return (float)sqrt(((ray.raypoint[0].x - ray.raypoint[1].x) * (ray.raypoint[0].x - ray.raypoint[1].x)) + ((ray.raypoint[0].y - ray.raypoint[1].y) * (ray.raypoint[0].y - ray.raypoint[1].y)) + ((ray.raypoint[0].z - ray.raypoint[1].z) * (ray.raypoint[0].z - ray.raypoint[1].z)));
   }
 
   //gives unit vector of a ray as a ray from the first point of the ray
@@ -160,20 +161,22 @@ namespace world
   }
 
   //scales ray by unit vector of ray multiplied by magnitude; inplace
-  void rayscaler(ray& rays, float mag) {
-    ray unitray = unitvectorofray(rays);
+  void rayscaler(ray& rays, float mag, ray unitray) {
     rays = { {{unitray.raypoint[0]},{unitray.raypoint[1].x * mag,unitray.raypoint[1].y * mag,unitray.raypoint[1].z * mag}} };
   }
 
-  void shadepoint(ray& rays, color &objcolor, lightsource light) { 
-    if (magnitudeofaray(rays) <= light.brightness) {
-      int brightness = 255 * (light.brightness / magnitudeofaray(rays));
+  //shades points based on how far it is from the lightsource
+  void shadepoint(ray& rays, color& objcolor, lightsource light, float magray) {
+    if (magray <= light.brightness) {
+      int brightness = 255 * (light.brightness / magray);
       mixcolor(objcolor, { brightness,brightness,brightness });
     }
     else {
-      mixcolor(objcolor, { 0,0,0 });
+      objcolor = { 0,0,0 };
     }
   }
+
+
 
   //class with list of objects to be rendered onto screen; buildarray function renders scene
   class currentworld
@@ -212,14 +215,14 @@ namespace world
         }
       }
     };
-
     //returns the color of the object the ray collides with else returns black;
     color willraycollide(ray rays, bool gotosun)
     {
       ray increm = rays;
-      rayscaler(increm, 100);
-      float scalee = 100.0f;
-      while (scalee >= 1)
+      ray uniincrem = unitvectorofray(increm);
+      rayscaler(increm, 1.25, uniincrem);
+      float scalee = 1.25f;
+      while (scalee <= 100)
       {
         for (sphere& cursph : sphereworld)
         {
@@ -228,15 +231,15 @@ namespace world
             ray coltolight;
             coltolight.raypoint[0] = increm.raypoint[1];
             coltolight.raypoint[1] = light.pos;
-            shadepoint(coltolight, cursph.col, light);
+            shadepoint(coltolight, cursph.col, light, magnitudeofaray(coltolight));
             return cursph.col;
           }
         }/*
         for (mesh& curmesh : meshworld) {
 
         }*/
-        scalee -= 0.25;
-        rayscaler(increm, scalee);
+        scalee += 0.25;
+        rayscaler(increm, scalee, uniincrem);
       }
       return { 0, 0, 0 };
     }
