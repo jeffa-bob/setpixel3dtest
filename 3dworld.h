@@ -165,9 +165,14 @@ namespace world
     rays = { {{unitray.raypoint[0]},{unitray.raypoint[1].x * mag,unitray.raypoint[1].y * mag,unitray.raypoint[1].z * mag}} };
   }
 
-  color shadepoint(ray& rays, color objcolor, lightsource light) {
-    int brightness = 255 * (magnitudeofaray(rays) / light.brightness);
-    return { brightness,brightness,brightness };
+  void shadepoint(ray& rays, color &objcolor, lightsource light) { 
+    if (magnitudeofaray(rays) <= light.brightness) {
+      int brightness = 255 * (light.brightness / magnitudeofaray(rays));
+      mixcolor(objcolor, { brightness,brightness,brightness });
+    }
+    else {
+      mixcolor(objcolor, { 0,0,0 });
+    }
   }
 
   //class with list of objects to be rendered onto screen; buildarray function renders scene
@@ -223,7 +228,7 @@ namespace world
             ray coltolight;
             coltolight.raypoint[0] = increm.raypoint[1];
             coltolight.raypoint[1] = light.pos;
-            mixcolor(cursph.col, light.col);
+            shadepoint(coltolight, cursph.col, light);
             return cursph.col;
           }
         }/*
