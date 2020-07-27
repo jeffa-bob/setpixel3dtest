@@ -171,17 +171,21 @@ namespace world
     return (float)sqrt(((ray.raypoint[0].x - ray.raypoint[1].x) * (ray.raypoint[0].x - ray.raypoint[1].x)) + ((ray.raypoint[0].y - ray.raypoint[1].y) * (ray.raypoint[0].y - ray.raypoint[1].y)) + ((ray.raypoint[0].z - ray.raypoint[1].z) * (ray.raypoint[0].z - ray.raypoint[1].z)));
   }
 
-  _3dpos crossproduce(_3dpos fir, _3dpos sec) {
-    return { 1,12,2 };
+  float dotproduct(_3dpos n, _3dpos tri0) {
+    return (n.x * tri0.x) + (n.y * tri0.y) + (n.z * tri0.z);
+  }
+
+  _3dpos crossproduct(_3dpos U, _3dpos V) {
+    return { (U.y * V.z) - (U.z * V.y), (U.z * V.x) - (U.x * V.z), (U.x * V.y) - (U.y * V.x) };
   }
 
   //returns a ray of the trianges normal
-  ray trinormal(tri curtri) {
-    _3dpos cutri1 = curtri.tri[1];
-    sub_3dpos(cutri1, curtri.tri[0]);
-    _3dpos cutri2 = curtri.tri[2];
-    sub_3dpos(cutri1, curtri.tri[0]);
-    return { {{1,12,2},{1,12,2} } };
+  _3dpos trinormal(tri &curtri) {
+    _3dpos U = curtri.tri[1];
+    sub_3dpos(U, curtri.tri[0]);
+    _3dpos V = curtri.tri[2];
+    sub_3dpos(V, curtri.tri[0]);
+    return crossproduct(U,V);
   }
 
   //gives unit vector of a ray as a ray from the first point of the ray
