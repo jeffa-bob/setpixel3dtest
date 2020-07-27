@@ -111,9 +111,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    world::currentworld newworld;
-   newworld.light = { {-10,25,0},{255,255,255},14 };
+   newworld.light = { {-10,25,0},{255,255,255},17 };
    SetWindowPos(hWnd, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
    newworld.sphereworld.push_back({ {0,20,0},5,{155,155,155} });
+   //newworld.sphereworld.push_back({ {10,20,0},10,{155,155,155} });
    newworld.window = GetDC(hWnd);
    newworld.renderscreen();
 

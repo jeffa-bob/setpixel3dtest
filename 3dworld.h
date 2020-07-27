@@ -1,6 +1,5 @@
 #include <vector>
 #include <array>
-#include <DirectXMath.h>
 #include <cmath>
 
 namespace world
@@ -120,6 +119,24 @@ namespace world
     fir.z /= sec.z;
   }
 
+  /*sets the meshes detection sphere to the correct size
+  void generatemeshsphere(mesh& curmesh) {
+    _3dpos farplace;
+    _3dpos cenmesh = centerofmesh(curmesh);
+    for (tri& curtri : curmesh.mesh) {
+      _3dpos diff;
+      _3dpos centri = centeroftri(curtri);
+      diff.x = abs(cenmesh.x - centri.x);
+      diff.y = abs(cenmesh.y - centri.y);
+      diff.z = abs(cenmesh.z - centri.z);
+      if ( greater_3dpos(x,farplace)) {
+        farplace = x;
+      }
+    }
+    curmesh.checkbox.pos = cenmesh;
+    curmesh.checkbox.radius = magnitudeofaray({ {cenmesh,farplace} })+0.2;
+  }*/
+
   //returns true if the first _3dpos is greater than the second on all axis
   bool greater_3dpos(_3dpos fir, _3dpos sec)
   {
@@ -152,6 +169,19 @@ namespace world
   float magnitudeofaray(ray ray)
   {
     return (float)sqrt(((ray.raypoint[0].x - ray.raypoint[1].x) * (ray.raypoint[0].x - ray.raypoint[1].x)) + ((ray.raypoint[0].y - ray.raypoint[1].y) * (ray.raypoint[0].y - ray.raypoint[1].y)) + ((ray.raypoint[0].z - ray.raypoint[1].z) * (ray.raypoint[0].z - ray.raypoint[1].z)));
+  }
+
+  _3dpos crossproduce(_3dpos fir, _3dpos sec) {
+    return { 1,12,2 };
+  }
+
+  //returns a ray of the trianges normal
+  ray trinormal(tri curtri) {
+    _3dpos cutri1 = curtri.tri[1];
+    sub_3dpos(cutri1, curtri.tri[0]);
+    _3dpos cutri2 = curtri.tri[2];
+    sub_3dpos(cutri1, curtri.tri[0]);
+    return { {{1,12,2},{1,12,2} } };
   }
 
   //gives unit vector of a ray as a ray from the first point of the ray
@@ -236,8 +266,12 @@ namespace world
           }
         }/*
         for (mesh& curmesh : meshworld) {
-
-        }*/
+          if (rayspherecollision(increm.raypoint[1], curmesh.checkbox)) {
+            for (tri& curtri : curmesh.mesh) {
+              _3dpos
+            }
+          }
+        } */
         scalee += 0.25;
         rayscaler(increm, scalee, uniincrem);
       }
