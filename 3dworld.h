@@ -30,7 +30,6 @@ namespace world
   {
     _3dpos pos;
     float radius;
-    color col;
   };
   // source of light
   struct lightsource
@@ -51,14 +50,12 @@ namespace world
     float fov;
   };
 
-  //vector of tris and a sphere that is the checks if the mesh should be checked more closely to find what triangle a ray collides with
+  /*vector of tris and a sphere that is the checks if the mesh should be checked more closely to find what triangle a ray collides with
   struct mesh
   {
     std::vector<tri> mesh;
-    //the area around the mesh where pixels will check exactly which triangles to check for
-    sphere checkbox;
   };
-
+  */
   //sets first color to be average of both color
   void mixcolor(color& col1, color col2)
   {
@@ -88,7 +85,7 @@ namespace world
   }
 
   //changes first paramenter to the sum of the first and second parameters
-  void add_3dpos(_3dpos& fir, _3dpos& sec)
+  void add_3dpos(_3dpos& fir, const _3dpos& sec)
   {
     fir.x += sec.x;
     fir.y += sec.y;
@@ -96,7 +93,7 @@ namespace world
   }
 
   //changes first paramenter to the difference of the first and second parameters
-  void sub_3dpos(_3dpos& fir, _3dpos sec)
+  void sub_3dpos(_3dpos& fir, const _3dpos sec)
   {
     fir.x -= sec.x;
     fir.y -= sec.y;
@@ -104,7 +101,7 @@ namespace world
   }
 
   //changes first paramenter to the product of the first and second parameters
-  void mul_3dpos(_3dpos& fir, _3dpos sec)
+  void mul_3dpos(_3dpos& fir, const _3dpos sec)
   {
     fir.x *= sec.x;
     fir.y *= sec.y;
@@ -112,30 +109,13 @@ namespace world
   }
 
   //changes first paramenter to the quotient of the first and second parameters
-  void div_3dpos(_3dpos& fir, _3dpos& sec)
+  void div_3dpos(_3dpos& fir, const _3dpos& sec)
   {
     fir.x /= sec.x;
     fir.y /= sec.y;
     fir.z /= sec.z;
   }
 
-  /*sets the meshes detection sphere to the correct size
-  void generatemeshsphere(mesh& curmesh) {
-    _3dpos farplace;
-    _3dpos cenmesh = centerofmesh(curmesh);
-    for (tri& curtri : curmesh.mesh) {
-      _3dpos diff;
-      _3dpos centri = centeroftri(curtri);
-      diff.x = abs(cenmesh.x - centri.x);
-      diff.y = abs(cenmesh.y - centri.y);
-      diff.z = abs(cenmesh.z - centri.z);
-      if ( greater_3dpos(x,farplace)) {
-        farplace = x;
-      }
-    }
-    curmesh.checkbox.pos = cenmesh;
-    curmesh.checkbox.radius = magnitudeofaray({ {cenmesh,farplace} })+0.2;
-  }*/
 
   //returns true if the first _3dpos is greater than the second on all axis
   bool greater_3dpos(_3dpos fir, _3dpos sec)
@@ -143,7 +123,7 @@ namespace world
     return fir.x > sec.x && fir.y > sec.y && fir.z > sec.z;
   }
 
-  //returns median of centrion of all tris in a mesh
+  /*returns median of centrion of all tris in a mesh
   _3dpos centerofmesh(mesh current)
   {
     _3dpos final = { 0,0,0 };
@@ -157,7 +137,7 @@ namespace world
     final.y /= current.mesh.size();
     final.z /= current.mesh.size();
     return final;
-  }
+  }*/
 
   //returns true if the end of a ray collids with a sphere;
   bool rayspherecollision(_3dpos rays, sphere sph)
@@ -171,17 +151,30 @@ namespace world
     return (float)sqrt(((ray.raypoint[0].x - ray.raypoint[1].x) * (ray.raypoint[0].x - ray.raypoint[1].x)) + ((ray.raypoint[0].y - ray.raypoint[1].y) * (ray.raypoint[0].y - ray.raypoint[1].y)) + ((ray.raypoint[0].z - ray.raypoint[1].z) * (ray.raypoint[0].z - ray.raypoint[1].z)));
   }
 
+  // dot product of two vectors
   float dotproduct(_3dpos n, _3dpos tri0) {
     return (n.x * tri0.x) + (n.y * tri0.y) + (n.z * tri0.z);
   }
 
+  // cross product of two vectors
   _3dpos crossproduct(_3dpos U, _3dpos V) {
     return { (U.y * V.z) - (U.z * V.y), (U.z * V.x) - (U.x * V.z), (U.x * V.y) - (U.y * V.x) };
   }
 
-  bool intersecttri(tri &curtri, ray check){
+  //returns a ray of the trianges normal
+  ray trinormal(tri& curtri) {
+    _3dpos U = curtri.tri[1];
+    sub_3dpos(U, curtri.tri[0]);
+    _3dpos V = curtri.tri[2];
+    sub_3dpos(V, curtri.tri[0]);
+    return { {curtri.tri[0],crossproduct(U,V)} };
+  }
+
+
+  // returns true if a ray intersects a triangle
+  bool intersecttri(tri& curtri, ray check) {
     _3dpos normal = trinormal(curtri).raypoint[1];
-    float d = dotproduct(normal,curtri.tri[0]);
+    float d = dotproduct(normal, curtri.tri[0]);
     float t = ((dotproduct(normal, check.raypoint[0]) + d) / dotproduct(normal, check.raypoint[1]));
     if (t < 0) {
       return false;
@@ -189,7 +182,7 @@ namespace world
     _3dpos mult = check.raypoint[0];
     mul_3dpos(mult, { t,t,t });
     _3dpos P = check.raypoint[0];
-    add_3dpos(P,mult);
+    add_3dpos(P, mult);
     _3dpos edge0 = curtri.tri[1];
     sub_3dpos(edge0, curtri.tri[0]);
     _3dpos edge1 = curtri.tri[2];
@@ -204,15 +197,6 @@ namespace world
     sub_3dpos(C2, curtri.tri[2]);
     if (dotproduct(normal, crossproduct(edge0, C0)) > 0 && dotproduct(normal, crossproduct(edge1, C1)) > 0 && dotproduct(normal, crossproduct(edge2, C2)) > 0) { return true; };
   }
-  //returns a ray of the trianges normal
-  ray trinormal(tri &curtri) {
-    _3dpos U = curtri.tri[1];
-    sub_3dpos(U, curtri.tri[0]);
-    _3dpos V = curtri.tri[2];
-    sub_3dpos(V, curtri.tri[0]);
-    return { {curtri.tri[0],crossproduct(U,V)} };
-  }
-
   //gives unit vector of a ray as a ray from the first point of the ray
   ray unitvectorofray(ray& rays) {
     float magnitute = magnitudeofaray(rays);
@@ -225,7 +209,7 @@ namespace world
   }
 
   //shades points based on how far it is from the lightsource
-  void shadepoint(ray& rays, color& objcolor, lightsource light, float magray) {
+  void shadepoint(color& objcolor, lightsource light, float magray) {
     if (magray <= light.brightness) {
       int brightness = 255 * (light.brightness / magray);
       mixcolor(objcolor, { brightness,brightness,brightness });
@@ -234,10 +218,26 @@ namespace world
       objcolor = { 0,0,0 };
     }
   }
+  /*
+  //sets the meshes detection sphere to the correct size
+  void generatemeshsphere(mesh& curmesh) {
+    _3dpos farplace;
+    _3dpos cenmesh = centerofmesh(curmesh);
+    for (tri& curtri : curmesh.mesh) {
+      _3dpos diff;
+      _3dpos centri = centeroftri(curtri);
+      diff.x = abs(cenmesh.x - centri.x);
+      diff.y = abs(cenmesh.y - centri.y);
+      diff.z = abs(cenmesh.z - centri.z);
+      if ( greater_3dpos(diff,farplace)) {
+        farplace = diff;
+      }
+    }
+    curmesh.checkbox.pos = cenmesh;
+    curmesh.checkbox.radius = magnitudeofaray({ {cenmesh,farplace} })+0.2;
+   }*/
 
-
-
-  //class with list of objects to be rendered onto screen; buildarray function renders scene
+   //class with list of objects to be rendered onto screen; buildarray function renders scene
   class currentworld
   {
   public:
@@ -245,10 +245,7 @@ namespace world
     HDC window;
 
     //vector of all of the meshes in the current world
-    std::vector<mesh> meshworld;
-
-    //vector of all of the spheres in the current world
-    std::vector<sphere> sphereworld;
+    std::vector<tri> triworld;
 
     //the camera with width, height(in pixels), field of view, and distance that rays can go
     camera cam = { 600, 600, {0, 0}, {{{0, 0, 0}, {0, 1, 0}}}, 1.396263f };
@@ -259,15 +256,13 @@ namespace world
     void renderscreen()
     {
       //sphereworld.push_back({ light.pos,5,{light.brightness,light.brightness,light.brightness} });
-      ray forward = { {{cam.pos},{cam.camdir.raypoint[1].x,cam.camdir.raypoint[1].y + 1,cam.camdir.raypoint[1].z} } };
-      ray right = { {{cam.pos},{forward.raypoint[1].y,-forward.raypoint[1].y,forward.raypoint[1].z} } };
       float halfwidth = tan(cam.fov / 2);
       for (int i = 0; i < cam.height; ++i)
       {
         for (int j = 0; j < cam.width; ++j)
         {
-          float wideoffset = ((i * 2.0 / (cam.width - 1.0)) - 1.0) * halfwidth;
-          float lengthoffset = ((j * 2.0 / (cam.width - 1.0)) - 1.0) * halfwidth;
+          float wideoffset = ((i * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
+          float lengthoffset = ((j * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
           ray curray = { {{cam.pos},{1 * wideoffset,cam.camdir.raypoint[1].y,1 * lengthoffset}} };
           color raycol = willraycollide(curray);
           SetPixel(window, j, i, RGB(raycol.r, raycol.g, raycol.b));
@@ -275,25 +270,17 @@ namespace world
       }
     };
     //returns the color of the object the ray collides with else returns black;
-    color willraycollide(ray rays)
+    color willraycollide(const ray& rays)
     {
       ray increm = rays;
       ray uniincrem = unitvectorofray(increm);
-      rayscaler(increm, 1.25, uniincrem);
-      float scalee = 1.25f;
-      while (scalee <= 100)
-      {
-        for (mesh& curmesh : meshworld) {
-          if (rayspherecollision(increm.raypoint[1], curmesh.checkbox)) {
-            for (tri& curtri : curmesh.mesh) {
-              if (intersecttri(curtri, rays)) {
-                return curtri.col;
-              }
-            }
-          }
-        } 
-        scalee += 0.25;
-        rayscaler(increm, scalee, uniincrem);
+      rayscaler(increm, 100, uniincrem);
+      for (tri curtri : triworld) {
+        bool tricheck = intersecttri(curtri, rays);
+        std::cout << std::boolalpha << tricheck << std::endl;
+        if (tricheck) {
+          return curtri.col;
+        }
       }
       return { 0, 0, 0 };
     }
