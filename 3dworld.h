@@ -104,7 +104,7 @@ namespace world
   }
 
   //changes first paramenter to the product of the first and second parameters
-  void mul_3dpos(_3dpos& fir, _3dpos& sec)
+  void mul_3dpos(_3dpos& fir, _3dpos sec)
   {
     fir.x *= sec.x;
     fir.y *= sec.y;
@@ -179,13 +179,38 @@ namespace world
     return { (U.y * V.z) - (U.z * V.y), (U.z * V.x) - (U.x * V.z), (U.x * V.y) - (U.y * V.x) };
   }
 
+  bool intersecttri(tri &curtri, ray check){
+    _3dpos normal = trinormal(curtri).raypoint[1];
+    float d = dotproduct(normal,curtri.tri[0]);
+    float t = ((dotproduct(normal, check.raypoint[0]) + d) / dotproduct(normal, check.raypoint[1]));
+    if (t < 0) {
+      return false;
+    }
+    _3dpos mult = check.raypoint[0];
+    mul_3dpos(mult, { t,t,t });
+    _3dpos P = check.raypoint[0];
+    add_3dpos(P,mult);
+    _3dpos edge0 = curtri.tri[1];
+    sub_3dpos(edge0, curtri.tri[0]);
+    _3dpos edge1 = curtri.tri[2];
+    sub_3dpos(edge1, curtri.tri[1]);
+    _3dpos edge2 = curtri.tri[0];
+    sub_3dpos(edge2, curtri.tri[2]);
+    _3dpos C0 = P;
+    sub_3dpos(C0, curtri.tri[0]);
+    _3dpos C1 = P;
+    sub_3dpos(C1, curtri.tri[1]);
+    _3dpos C2 = P;
+    sub_3dpos(C2, curtri.tri[2]);
+    if (dotproduct(normal, crossproduct(edge0, C0)) > 0 && dotproduct(normal, crossproduct(edge1, C1)) > 0 && dotproduct(normal, crossproduct(edge2, C2)) > 0) { return true; };
+  }
   //returns a ray of the trianges normal
-  _3dpos trinormal(tri &curtri) {
+  ray trinormal(tri &curtri) {
     _3dpos U = curtri.tri[1];
     sub_3dpos(U, curtri.tri[0]);
     _3dpos V = curtri.tri[2];
     sub_3dpos(V, curtri.tri[0]);
-    return crossproduct(U,V);
+    return { {curtri.tri[0],crossproduct(U,V)} };
   }
 
   //gives unit vector of a ray as a ray from the first point of the ray
@@ -244,13 +269,13 @@ namespace world
           float wideoffset = ((i * 2.0 / (cam.width - 1.0)) - 1.0) * halfwidth;
           float lengthoffset = ((j * 2.0 / (cam.width - 1.0)) - 1.0) * halfwidth;
           ray curray = { {{cam.pos},{1 * wideoffset,cam.camdir.raypoint[1].y,1 * lengthoffset}} };
-          color raycol = willraycollide(curray, false);
+          color raycol = willraycollide(curray);
           SetPixel(window, j, i, RGB(raycol.r, raycol.g, raycol.b));
         }
       }
     };
     //returns the color of the object the ray collides with else returns black;
-    color willraycollide(ray rays, bool gotosun)
+    color willraycollide(ray rays)
     {
       ray increm = rays;
       ray uniincrem = unitvectorofray(increm);
@@ -258,24 +283,15 @@ namespace world
       float scalee = 1.25f;
       while (scalee <= 100)
       {
-        for (sphere& cursph : sphereworld)
-        {
-          if (rayspherecollision(increm.raypoint[1], cursph))
-          {
-            ray coltolight;
-            coltolight.raypoint[0] = increm.raypoint[1];
-            coltolight.raypoint[1] = light.pos;
-            shadepoint(coltolight, cursph.col, light, magnitudeofaray(coltolight));
-            return cursph.col;
-          }
-        }/*
         for (mesh& curmesh : meshworld) {
           if (rayspherecollision(increm.raypoint[1], curmesh.checkbox)) {
             for (tri& curtri : curmesh.mesh) {
-              _3dpos
+              if (intersecttri(curtri, rays)) {
+                return curtri.col;
+              }
             }
           }
-        } */
+        } 
         scalee += 0.25;
         rayscaler(increm, scalee, uniincrem);
       }
