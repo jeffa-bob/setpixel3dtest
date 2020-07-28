@@ -163,7 +163,7 @@ namespace world
 
   // dot product of two vectors
   float dotproduct(_3dvect n, _3dvect tri0) {
-    return (n.x * tri0.x) + (n.y * tri0.y) + (n.z * tri0.z);
+    return ((n.x * tri0.x) + (n.y * tri0.y) + (n.z * tri0.z));
   }
 
   // cross product of two vectors

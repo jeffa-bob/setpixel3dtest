@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include "wingdi.h"
-#include "setpixel3dtest.h"
+#include "setpixel3dtest.hpp"
 #include "3dworld.h"
 
 #define MAX_LOADSTRING 100
@@ -131,9 +131,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   fp = _fdopen(hConsole, "w");
 
   freopen_s(&fp, "CONOUT$", "w", stdout);
-
-  printf("Hello console on\n");
-  std::cout << "Windows 10" << std::endl;
 
 
   newworld.renderscreen(); 
