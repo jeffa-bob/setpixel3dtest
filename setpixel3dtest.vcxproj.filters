@@ -27,7 +27,7 @@
     <ClInclude Include="setpixel3dtest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="3dworld.h">
+    <ClInclude Include="3dworld.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

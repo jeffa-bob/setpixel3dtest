@@ -6,8 +6,8 @@
 #include <fcntl.h>
 #include <iostream>
 #include "wingdi.h"
-#include "setpixel3dtest.hpp"
-#include "3dworld.h"
+#include "setpixel3dtest.h"
+#include "3dworld.hpp"
 
 #define MAX_LOADSTRING 100
 
@@ -116,12 +116,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   world::currentworld newworld;
   newworld.light = { {-10,25,0},{255,255,255},17 };
   SetWindowPos(hWnd, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
-  world::tri triangle = { { {0, 30, 0}, { 0,30,5 }, { 5,30,0 }}, { 0,255,0 } };
+  world::tri triangle = { { {2, 15, 0}, { 2,12,3 }, { 5,15,0 }}, { 0,255,0 } };
   triangle.normal = world::trinormal(triangle).raypoint[1];
   newworld.triworld.push_back(triangle);
   newworld.window = GetDC(hWnd);
 
-
+  /* console for debugging
   AllocConsole();
   HANDLE stdHandle;
   int hConsole;
@@ -131,7 +131,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   fp = _fdopen(hConsole, "w");
 
   freopen_s(&fp, "CONOUT$", "w", stdout);
-
+  */
+  
 
   newworld.renderscreen(); 
 
