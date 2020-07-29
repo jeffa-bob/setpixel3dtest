@@ -165,7 +165,7 @@ namespace world
   // dot product of two vectors
   float dotproduct(_3dvect n, _3dvect tri0)
   {
-    return- ((n.x * tri0.x) + (n.y * tri0.y) + (n.z * tri0.z));
+    return ((n.x * tri0.x) + (n.y * tri0.y) + (n.z * tri0.z));
   }
 
   // cross product of two vectors
@@ -177,14 +177,11 @@ namespace world
   //returns a ray of the trianges normal
   ray trinormal(tri &curtri)
   {
-    _3dvect U = curtri.tri[1];
+    _3dvect U  = curtri.tri[1];
     sub_3dvect(U, curtri.tri[0]);
     _3dvect V = curtri.tri[2];
     sub_3dvect(V, curtri.tri[0]);
     ray nonunit = {{curtri.tri[0], crossproduct(U, V)}};
-    nonunit.raypoint[1].x = -nonunit.raypoint[1].x;
-    nonunit.raypoint[1].y = -nonunit.raypoint[1].y;
-    nonunit.raypoint[1].z = -nonunit.raypoint[1].z;
     return nonunit;
   }
 
