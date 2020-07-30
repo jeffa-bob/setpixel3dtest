@@ -116,7 +116,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   world::currentworld newworld;
   newworld.light = { {-10,25,0},{255,255,255},17 };
   SetWindowPos(hWnd, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
-  world::tri triangle = { { {2, 15, 0}, { 2,12,3 }, { 5,15,0 }}, { 0,255,0 } };
+  world::tri triangle = { { {-12, 15, -10}, { 12,16,10 }, {15,15,0 }}, { 0,255,0 } };
   triangle.normal = world::trinormal(triangle).raypoint[1];
   newworld.triworld.push_back(triangle);
   newworld.window = GetDC(hWnd);

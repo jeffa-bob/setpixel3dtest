@@ -213,7 +213,7 @@ namespace world
   }
   float normalizedot(_3dvect u, _3dvect v){
     float x = dotproduct(u, v);
-    return(x/(magnitudeofaray({{{0, 0, 0}, v}})) * (magnitudeofaray({{{0, 0, 0}, v}})));
+    return abs(x/(magnitudeofaray({{v,{0, 0, 0}}}) * (magnitudeofaray({ {u,{0, 0, 0}} }))));
   }
   //class with list of objects to be rendered onto screen; buildarray function renders scene
   class currentworld
@@ -226,7 +226,7 @@ namespace world
     std::vector<tri> triworld;
 
     //the camera with width, height(in pixels), field of view, and distance that rays can go
-    camera cam = {600, 600, {0, 0}, {{{0, 0, 0}, {0, 1, 0}}}, 1.396263f};
+    camera cam = {600, 600, {0, 0, 0}, {{{0, 0, 0}, {0, 1, 0}}}, 1.396263f};
 
     lightsource light;
 
@@ -257,11 +257,11 @@ namespace world
         if (tricheck)
         {
           _3dvect adjustray = increm.raypoint[1];
-          sub_3dvect(adjustray, increm.raypoint[1]);
+          sub_3dvect(adjustray, increm.raypoint[0]);
           _3dvect adjustnorm = curtri.normal;
           sub_3dvect(adjustnorm,curtri.tri[0]);
           float greyfact = normalizedot(adjustray, adjustnorm);
-          return {255* (int)greyfact,255* (int)greyfact,255*(int)greyfact};
+          return {(int)(curtri.col.r*greyfact),(int)(curtri.col.g * greyfact),(int)(curtri.col.b * greyfact)};
         }
       }
       return {0, 0, 0};
