@@ -26,7 +26,6 @@ namespace world
     color col;
     _3dvect normal;
   };
-  //one sphere with a location, radius, and color
   struct sphere
   {
     _3dvect pos;
@@ -58,9 +57,9 @@ namespace world
   };
   */
   //sets first color to be average of both color
-  void mixcolor(color &col1, color col2)
+  void mixcolor(color& col1, color col2)
   {
-    col1 = {col1.r + col2.r / 2, col1.g + col2.g / 2, col1.b + col2.b / 2};
+    col1 = { col1.r + col2.r / 2, col1.g + col2.g / 2, col1.b + col2.b / 2 };
   };
 
   //returns true if both _3dvect are equal to each other
@@ -86,7 +85,7 @@ namespace world
   }
 
   //changes first paramenter to the sum of the first and second parameters
-  void add_3dvect(_3dvect &fir, const _3dvect &sec)
+  void add_3dvect(_3dvect& fir, const _3dvect& sec)
   {
     fir.x += sec.x;
     fir.y += sec.y;
@@ -94,7 +93,7 @@ namespace world
   }
 
   //changes first paramenter to the difference of the first and second parameters
-  void sub_3dvect(_3dvect &fir, const _3dvect sec)
+  void sub_3dvect(_3dvect& fir, const _3dvect sec)
   {
     fir.x -= sec.x;
     fir.y -= sec.y;
@@ -102,7 +101,7 @@ namespace world
   }
 
   //changes first paramenter to the product of the first and second parameters
-  void mul_3dvect(_3dvect &fir, const _3dvect sec)
+  void mul_3dvect(_3dvect& fir, const _3dvect sec)
   {
     fir.x *= sec.x;
     fir.y *= sec.y;
@@ -110,7 +109,7 @@ namespace world
   }
 
   //changes first paramenter to the quotient of the first and second parameters
-  void div_3dvect(_3dvect &fir, const _3dvect &sec)
+  void div_3dvect(_3dvect& fir, const _3dvect& sec)
   {
     fir.x /= sec.x;
     fir.y /= sec.y;
@@ -122,22 +121,6 @@ namespace world
   {
     return fir.x > sec.x && fir.y > sec.y && fir.z > sec.z;
   }
-
-  /*returns median of centrion of all tris in a mesh
-  _3dvect centerofmesh(mesh current)
-  {
-    _3dvect final = { 0,0,0 };
-    for (tri curtri : current.mesh)
-    {
-      final.x += centeroftri(curtri).x;
-      final.y += centeroftri(curtri).y;
-      final.z += centeroftri(curtri).z;
-    }
-    final.x /= current.mesh.size();
-    final.y /= current.mesh.size();
-    final.z /= current.mesh.size();
-    return final;
-  }*/
 
   //returns true if the end of a ray collids with a sphere;
   bool rayspherecollision(_3dvect rays, sphere sph)
@@ -228,7 +211,10 @@ namespace world
     if ( h < 0)return false;
     return true;
   }
-
+  float normalizedot(_3dvect u, _3dvect v){
+    float x = dotproduct(u, v);
+    return(x/(magnitudeofaray({{{0, 0, 0}, v}})) * (magnitudeofaray({{{0, 0, 0}, v}})));
+  }
   //class with list of objects to be rendered onto screen; buildarray function renders scene
   class currentworld
   {
@@ -265,15 +251,17 @@ namespace world
     color willraycollide(const ray &rays)
     {
       ray increm = rays;
-      ray uniincrem = unitvectorofray(increm);
-      rayscaler(increm, 100, uniincrem);
       for (tri curtri : triworld)
       {
         bool tricheck = intersecttri(curtri, rays);
-        //std::cout << std::boolalpha << tricheck << std::endl;
         if (tricheck)
         {
-          return curtri.col;
+          _3dvect adjustray = increm.raypoint[1];
+          sub_3dvect(adjustray, increm.raypoint[1]);
+          _3dvect adjustnorm = curtri.normal;
+          sub_3dvect(adjustnorm,curtri.tri[0]);
+          float greyfact = normalizedot(adjustray, adjustnorm);
+          return {255* (int)greyfact,255* (int)greyfact,255*(int)greyfact};
         }
       }
       return {0, 0, 0};
