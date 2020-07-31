@@ -44,9 +44,7 @@ namespace world
   {
     int width, height;
     _3dvect pos;
-    //direction of camera;
     ray camdir;
-    // field of view in radians
     float fov;
   };
 
@@ -172,9 +170,7 @@ namespace world
   bool intersecttri(tri& curtri, ray check)
   {
     _3dvect normal = curtri.normal;
-    //sub_3dvect(normal, curtri.tri[0]);
     float d = dotproduct(normal, curtri.tri[0]);
-    //sub_3dvect(check.raypoint[1], check.raypoint[0]);
     float t = ((dotproduct(normal, check.raypoint[0]) + d) / dotproduct(normal, check.raypoint[1]));
     if (t < 0) {
       return false;
@@ -226,14 +222,17 @@ namespace world
     std::vector<tri> triworld;
 
     //the camera with width, height(in pixels), field of view, and distance that rays can go
-    camera cam = {600, 600, {0, 0, 0}, {{{0, 0, 0}, {0, 1, 0}}}, 1.396263f};
+    camera cam = {600, 600, {0, 0, 0}, {{cam.pos, {0, 1, 0}}}, 1.396263f};
 
     lightsource light;
 
     //builds the 2d pixel array of colors and displayes it to the screen
     void renderscreen()
     {
-      //sphereworld.push_back({ light.pos,5,{light.brightness,light.brightness,light.brightness} });
+      COLORREF* pixelarr = (COLORREF*)calloc(600 * 600, sizeof(COLORREF));
+      //for (int i = 0; i < cam.width; ++i) {
+        //pixelarray[i] = new COLORREF[cam.width];
+      //}
       float halfwidth = tan(cam.fov / 2);
       for (int i = 0; i < cam.height; ++i)
       {
@@ -243,9 +242,16 @@ namespace world
           float lengthoffset = ((j * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
           ray curray = {{{cam.pos}, {1 * wideoffset, cam.camdir.raypoint[1].y, 1 * lengthoffset}}};
           color raycol = willraycollide(curray);
-          SetPixel(window, j, i, RGB(raycol.r, raycol.g, raycol.b));
+          pixelarr[cam.width*i+j] = RGB(raycol.r, raycol.g, raycol.b);
         }
       }
+      HDC src = CreateCompatibleDC(window);
+      HBITMAP map = CreateBitmap(cam.width, cam.height, 1, 32, (void*) pixelarr);
+      SelectObject(src, map);
+      BitBlt(window, 0, 0, cam.height, cam.width, src,0,0,SRCCOPY );
+      free(pixelarr);
+      DeleteObject(map);
+      DeleteDC(src);
     };
     //returns the color of the object the ray collides with else returns black;
     color willraycollide(const ray &rays)

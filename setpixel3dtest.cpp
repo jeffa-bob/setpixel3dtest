@@ -116,12 +116,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
   world::currentworld newworld;
   newworld.light = { {-10,25,0},{255,255,255},17 };
   SetWindowPos(hWnd, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
-  world::tri triangle = { { {-12, 15, -10}, { 12,16,10 }, {15,15,0 }}, { 0,255,0 } };
+  world::tri triangle = { { {-2, 19, -5}, { 6,12,5 }, {5,15,0 }}, { 0,255,0 } };
+  triangle.normal = world::trinormal(triangle).raypoint[1];
+  newworld.triworld.push_back(triangle);
+  triangle = { { {-1, 16, -5}, { 1,12,5 }, {1,15,0 }}, { 0,255,0 } };
   triangle.normal = world::trinormal(triangle).raypoint[1];
   newworld.triworld.push_back(triangle);
   newworld.window = GetDC(hWnd);
 
-  /* console for debugging
+  //console for debugging
+  /*
   AllocConsole();
   HANDLE stdHandle;
   int hConsole;
@@ -132,6 +136,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
   freopen_s(&fp, "CONOUT$", "w", stdout);
   */
+  
   
 
   newworld.renderscreen(); 
