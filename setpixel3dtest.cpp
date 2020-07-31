@@ -13,6 +13,7 @@
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
+HWND CURWIN;
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
@@ -47,10 +48,55 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
   MSG msg;
 
+
+  world::currentworld newworld;
+  newworld.light = { {-10,25,0},{255,255,255},17 };
+  SetWindowPos(CURWIN, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
+  world::tri triangle = { { {-2, 19, -5}, { 6,12,5 }, {5,15,0 }}, { 0,255,0 } };
+  triangle.normal = world::trinormal(triangle).raypoint[1];
+  newworld.triworld.push_back(triangle);
+  triangle = { { {-1, 16, -5}, { 1,12,5 }, {1,15,0 }}, { 0,255,0 } };
+  triangle.normal = world::trinormal(triangle).raypoint[1];
+  newworld.triworld.push_back(triangle);
+  newworld.window = GetDC(CURWIN);
+
+
+  newworld.renderscreen();
+
+
   // Main message loop:
   while (GetMessage(&msg, nullptr, 0, 0))
   {
-    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+    if (msg.message == WM_KEYDOWN) {
+      switch (msg.wParam)
+      {
+      case VK_LEFT:
+
+        // Process the LEFT ARROW key. 
+
+        break;
+
+      case VK_RIGHT:
+
+        // Process the RIGHT ARROW key. 
+
+        break;
+
+      case VK_UP:
+        newworld.cam.pos.y = newworld.cam.pos.y + 1;
+        newworld.renderscreen();
+        break;
+
+      case VK_DOWN:
+        newworld.cam.pos.y = newworld.cam.pos.y - 1;
+        newworld.renderscreen();
+        break;
+
+      default:
+        break;
+      }
+    }
+    else
     {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
@@ -110,37 +156,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return FALSE;
   }
 
-  ShowWindow(hWnd, nCmdShow);
-  UpdateWindow(hWnd);
-
-  world::currentworld newworld;
-  newworld.light = { {-10,25,0},{255,255,255},17 };
-  SetWindowPos(hWnd, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
-  world::tri triangle = { { {-2, 19, -5}, { 6,12,5 }, {5,15,0 }}, { 0,255,0 } };
-  triangle.normal = world::trinormal(triangle).raypoint[1];
-  newworld.triworld.push_back(triangle);
-  triangle = { { {-1, 16, -5}, { 1,12,5 }, {1,15,0 }}, { 0,255,0 } };
-  triangle.normal = world::trinormal(triangle).raypoint[1];
-  newworld.triworld.push_back(triangle);
-  newworld.window = GetDC(hWnd);
-
-  //console for debugging
-  /*
-  AllocConsole();
-  HANDLE stdHandle;
-  int hConsole;
-  FILE* fp;
-  stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-  hConsole = _open_osfhandle((long)stdHandle, _O_TEXT);
-  fp = _fdopen(hConsole, "w");
-
-  freopen_s(&fp, "CONOUT$", "w", stdout);
-  */
-  
-  
-
-  newworld.renderscreen(); 
-
+  CURWIN = hWnd;
+  ShowWindow(CURWIN, nCmdShow);
+  UpdateWindow(CURWIN);
 
   return TRUE;
 }
