@@ -1,6 +1,6 @@
 #include <vector>
 #include <array>
-#include <cmath>
+#include <math.h>
 
 namespace world
 {
@@ -104,14 +104,6 @@ namespace world
     fir.x *= sec.x;
     fir.y *= sec.y;
     fir.z *= sec.z;
-  }
-
-  //changes first paramenter to the quotient of the first and second parameters
-  void div_3dvect(_3dvect& fir, const _3dvect& sec)
-  {
-    fir.x /= sec.x;
-    fir.y /= sec.y;
-    fir.z /= sec.z;
   }
 
   //returns true if the first _3dvect is greater than the second on all axis
@@ -229,10 +221,9 @@ namespace world
     //builds the 2d pixel array of colors and displayes it to the screen
     void renderscreen()
     {
+      _3dvect adjustdir = cam.camdir.raypoint[1];
+      sub_3dvect(adjustdir, cam.pos);
       COLORREF* pixelarr = (COLORREF*)calloc(600 * 600, sizeof(COLORREF));
-      //for (int i = 0; i < cam.width; ++i) {
-        //pixelarray[i] = new COLORREF[cam.width];
-      //}
       float halfwidth = tan(cam.fov / 2);
       for (int i = 0; i < cam.height; ++i)
       {
@@ -240,7 +231,7 @@ namespace world
         {
           float wideoffset = ((i * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
           float lengthoffset = ((j * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
-          ray curray = {{{cam.pos}, {1 * wideoffset, cam.camdir.raypoint[1].y, 1 * lengthoffset}}};
+          ray curray = {{{cam.pos}, {1 * wideoffset, adjustdir.y, 1 * lengthoffset}}};
           color raycol = willraycollide(curray);
           pixelarr[cam.width*i+j] = RGB(raycol.r, raycol.g, raycol.b);
         }
@@ -253,6 +244,13 @@ namespace world
       DeleteObject(map);
       DeleteDC(src);
     };
+
+    void setcamangle(float curangle) {
+      cam.camdir.raypoint[1].y = sinf(curangle);
+      cam.camdir.raypoint[1].x = cosf(curangle);
+      add_3dvect(cam.camdir.raypoint[1], cam.pos);
+    }
+
     //returns the color of the object the ray collides with else returns black;
     color willraycollide(const ray &rays)
     {

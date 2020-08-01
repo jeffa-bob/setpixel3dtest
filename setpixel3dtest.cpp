@@ -52,17 +52,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
   world::currentworld newworld;
   newworld.light = { {-10,25,0},{255,255,255},17 };
   SetWindowPos(CURWIN, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
-  world::tri triangle = { { {-2, 19, -5}, { 6,12,5 }, {5,15,0 }}, { 0,255,0 } };
+  world::tri triangle = { { {-1, 16, -5}, { 1,12,5 }, {1,15,0 }}, { 0,255,0 } };
   triangle.normal = world::trinormal(triangle).raypoint[1];
   newworld.triworld.push_back(triangle);
-  triangle = { { {-1, 16, -5}, { 1,12,5 }, {1,15,0 }}, { 0,255,0 } };
+  triangle = { { {-2, 19, -5}, { 6,12,5 }, { 5,15,0 }}, { 0,255,0 } };
   triangle.normal = world::trinormal(triangle).raypoint[1];
   newworld.triworld.push_back(triangle);
   newworld.window = GetDC(CURWIN);
 
+  float curdirect = 0;
 
   newworld.renderscreen();
 
+  AllocConsole();
+  HANDLE stdHandle;
+  int hConsole;
+  FILE* fp;
+  stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+  hConsole = _open_osfhandle((long)stdHandle, _O_TEXT);
+  fp = _fdopen(hConsole, "w");
+  freopen_s(&fp, "CONOUT$", "w", stdout);
 
   // Main message loop:
   while (GetMessage(&msg, nullptr, 0, 0))
@@ -71,25 +80,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
       switch (msg.wParam)
       {
       case VK_LEFT:
-
-        // Process the LEFT ARROW key. 
-
+        //newworld.cam.pos.x -= 1;
+        //newworld.cam.camdir.raypoint[1].x -= 1;
+        curdirect -= 0.785;
+        newworld.setcamangle(curdirect);
+        newworld.renderscreen();
+        std::cout << newworld.cam.pos.x << " " << newworld.cam.pos.y << " " << newworld.cam.pos.z << "   " << newworld.cam.camdir.raypoint[1].x << " " << newworld.cam.camdir.raypoint[1].y << " " << newworld.cam.camdir.raypoint[1].z <<std::endl;
         break;
 
       case VK_RIGHT:
-
-        // Process the RIGHT ARROW key. 
-
+        //newworld.cam.pos.x += 1;
+        //newworld.cam.camdir.raypoint[1].x += 1;
+        curdirect += 0.785;
+        newworld.setcamangle(curdirect);
+        newworld.renderscreen();
+        std::cout << newworld.cam.pos.x << " " << newworld.cam.pos.y << " " << newworld.cam.pos.z << "   " << newworld.cam.camdir.raypoint[1].x << " " << newworld.cam.camdir.raypoint[1].y << " " << newworld.cam.camdir.raypoint[1].z << std::endl;
         break;
 
       case VK_UP:
-        newworld.cam.pos.y = newworld.cam.pos.y + 1;
+        newworld.cam.pos.y += 1;
+        newworld.cam.camdir.raypoint[1].y += 1;
         newworld.renderscreen();
+        std::cout << newworld.cam.pos.x << " " << newworld.cam.pos.y << " " << newworld.cam.pos.z << "   " << newworld.cam.camdir.raypoint[1].x << " " << newworld.cam.camdir.raypoint[1].y << " " << newworld.cam.camdir.raypoint[1].z << std::endl;
         break;
 
       case VK_DOWN:
-        newworld.cam.pos.y = newworld.cam.pos.y - 1;
+        newworld.cam.pos.y -= 1;
+        newworld.cam.camdir.raypoint[1].y -= 1;
         newworld.renderscreen();
+        std::cout << newworld.cam.pos.x << " " << newworld.cam.pos.y << " " << newworld.cam.pos.z << "   " << newworld.cam.camdir.raypoint[1].x << " " << newworld.cam.camdir.raypoint[1].y << " " << newworld.cam.camdir.raypoint[1].z << std::endl;
         break;
 
       default:
