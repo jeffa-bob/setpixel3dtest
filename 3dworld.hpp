@@ -17,7 +17,7 @@ namespace world
   //a color of 3 values, red,green, and blue
   struct color
   {
-    int r, g, b;
+    int b, g, r;
   };
   //array of three _3dvect that represents a triangle in 3d space, along with color
   struct tri
