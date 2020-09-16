@@ -50,7 +50,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
   world::currentworld newworld;
-  newworld.light = { {-10,25,0},{255,255,255},17 };
   SetWindowPos(CURWIN, HWND_TOP, 200, 200, newworld.cam.height, newworld.cam.width, SWP_NOMOVE);
 
   world::tri triangle = { { {-1, 16, -5}, { 1,12,5 }, {1,15,0 }}, { 0,255,0 } };

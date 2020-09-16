@@ -26,19 +26,6 @@ namespace world
     color col;
     _3dvect normal;
   };
-  struct sphere
-  {
-    _3dvect pos;
-    float radius;
-  };
-  // source of light
-  struct lightsource
-  {
-    _3dvect pos;
-    color col;
-    //brightness is distance to check for the lightsource for shading
-    int brightness;
-  };
   // camera view
   struct camera
   {
@@ -112,16 +99,10 @@ namespace world
     return fir.x > sec.x && fir.y > sec.y && fir.z > sec.z;
   }
 
-  //returns true if the end of a ray collids with a sphere;
-  bool rayspherecollision(_3dvect rays, sphere sph)
-  {
-    return ((rays.x - sph.pos.x) * (rays.x - sph.pos.x)) + ((rays.y - sph.pos.y) * (rays.y - sph.pos.y)) + ((rays.z - sph.pos.z) * (rays.z - sph.pos.z)) < sph.radius * sph.radius;
-  }
-
   //scales ray by unit vector of ray multiplied by magnitude; inplace
-  void rayscaler(ray &rays, float mag, ray unitray)
+  void rayscaler(ray& rays, float mag, ray unitray)
   {
-    rays = {{{unitray.raypoint[0]}, {unitray.raypoint[1].x * mag, unitray.raypoint[1].y * mag, unitray.raypoint[1].z * mag}}};
+    rays = { {{unitray.raypoint[0]}, {unitray.raypoint[1].x * mag, unitray.raypoint[1].y * mag, unitray.raypoint[1].z * mag}} };
   }
   //return the magnitute of a ray in a float, decimal will be rounded
   float magnitudeofaray(ray ray)
@@ -129,10 +110,10 @@ namespace world
     return (float)sqrt(((ray.raypoint[0].x - ray.raypoint[1].x) * (ray.raypoint[0].x - ray.raypoint[1].x)) + ((ray.raypoint[0].y - ray.raypoint[1].y) * (ray.raypoint[0].y - ray.raypoint[1].y)) + ((ray.raypoint[0].z - ray.raypoint[1].z) * (ray.raypoint[0].z - ray.raypoint[1].z)));
   }
   //gives unit vector of a ray as a ray from the first point of the ray
-  ray unitvectorofray(ray &rays)
+  ray unitvectorofray(ray& rays)
   {
     float magnitute = magnitudeofaray(rays);
-    return {{{rays.raypoint[0]}, {rays.raypoint[1].x / magnitute, rays.raypoint[1].y / magnitute, rays.raypoint[1].z / magnitute}}};
+    return { {{rays.raypoint[0]}, {rays.raypoint[1].x / magnitute, rays.raypoint[1].y / magnitute, rays.raypoint[1].z / magnitute}} };
   }
 
   // dot product of two vectors
@@ -144,17 +125,17 @@ namespace world
   // cross product of two vectors
   _3dvect crossproduct(_3dvect U, _3dvect V)
   {
-    return {((U.y * V.z) - (U.z * V.y)), ((U.z * V.x) - (U.x * V.z)), ((U.x * V.y) - (U.y * V.x))};
+    return { ((U.y * V.z) - (U.z * V.y)), ((U.z * V.x) - (U.x * V.z)), ((U.x * V.y) - (U.y * V.x)) };
   }
 
   //returns a ray of the trianges normal
-  ray trinormal(tri &curtri)
+  ray trinormal(tri& curtri)
   {
-    _3dvect U  = curtri.tri[1];
+    _3dvect U = curtri.tri[1];
     sub_3dvect(U, curtri.tri[0]);
     _3dvect V = curtri.tri[2];
     sub_3dvect(V, curtri.tri[0]);
-    ray nonunit = {{curtri.tri[0], crossproduct(U, V)}};
+    ray nonunit = { {curtri.tri[0], crossproduct(U, V)} };
     return nonunit;
   }
 
@@ -196,15 +177,15 @@ namespace world
     sub_3dvect(C0, curtri.tri[2]);
     c = crossproduct(edge0, C0);
     h = dotproduct(normal, c);
-    if ( h < 0)return false;
+    if (h < 0)return false;
     return true;
   }
-  float normalizedot(_3dvect u, _3dvect v){
+  float normalizedot(_3dvect u, _3dvect v) {
     float x = dotproduct(u, v);
-    return abs(x/(magnitudeofaray({{v,{0, 0, 0}}}) * (magnitudeofaray({ {u,{0, 0, 0}} }))));
+    return abs(x / (magnitudeofaray({ {v,{0, 0, 0}} }) * (magnitudeofaray({ {u,{0, 0, 0}} }))));
   }
   //class with list of objects to be rendered onto screen; buildarray function renders scene
-  class currentworld
+  static class currentworld
   {
   public:
     // handle to window
@@ -214,16 +195,44 @@ namespace world
     std::vector<tri> triworld;
 
     //the camera with width, height(in pixels), field of view, and distance that rays can go
-    camera cam = {600, 600, {0, 0, 0}, {{cam.pos, {0, 1, 0}}}, 1.396263f};
+    camera cam = { 600, 600, {0, 0, 0}, {{cam.pos, {0, 1, 0}}}, 1.396263f };
 
-    lightsource light;
+    float thickness;
+
+    COLORREF* pixelarr = (COLORREF*)calloc(600 * 600, sizeof(COLORREF));
+
+    void drawline(int x0, int y0, int x1, int y1, color col) {
+      float dx = abs(x1 - x0);
+      float sx = x0 < x1 ? 1 : -1;
+      float dy = -abs(y1 - y0);
+      float sy = y0 < y1 ? 1 : -1;
+      float err = dx + dy;  /* error value e_xy */
+      while (true) {   /* loop */
+        pixelarr[cam.width * y0 + x0] = RGB(col.r, col.g, col.b);
+        if (x0 == x1 && y0 == y1) break;
+        float e2 = 2 * err;
+        if (e2 >= dy) { /* e_xy+e_x > 0 */
+          err += dy;
+          x0 += sx;
+        }
+        if (e2 <= dx) { /* e_xy+e_y < 0 */
+          err += dx;
+          y0 += sy;
+        }
+      }
+    }
+
+    void drawtri(tri tris) {
+      drawline(tris.tri[0].x, tris.tri[0].y, tris.tri[1].y, tris.tri[1].y, { 0, 254,0 });
+      drawline(tris.tri[1].x, tris.tri[1].y, tris.tri[2].y, tris.tri[2].y, { 0, 254,0 });
+      drawline(tris.tri[2].x, tris.tri[2].y, tris.tri[0].y, tris.tri[0].y, { 0, 254,0 });
+    }
 
     //builds the 2d pixel array of colors and displayes it to the screen
     void renderscreen()
     {
       _3dvect adjustdir = cam.camdir.raypoint[1];
       sub_3dvect(adjustdir, cam.pos);
-      COLORREF* pixelarr = (COLORREF*)calloc(600 * 600, sizeof(COLORREF));
       float halfwidth = tan(cam.fov / 2);
       for (int i = 0; i < cam.height; ++i)
       {
@@ -231,15 +240,15 @@ namespace world
         {
           float wideoffset = ((i * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
           float lengthoffset = ((j * 2.0f / (cam.width - 1.0f)) - 1.0f) * halfwidth;
-          ray curray = {{{cam.pos}, {1 * wideoffset, adjustdir.y, 1 * lengthoffset}}};
+          ray curray = { {{cam.pos}, {1 * wideoffset, adjustdir.y, 1 * lengthoffset}} };
           color raycol = willraycollide(curray);
-          pixelarr[cam.width*i+j] = RGB(raycol.r, raycol.g, raycol.b);
+          pixelarr[cam.width * i + j] = RGB(raycol.r, raycol.g, raycol.b);
         }
       }
       HDC src = CreateCompatibleDC(window);
-      HBITMAP map = CreateBitmap(cam.width, cam.height, 1, 32, (void*) pixelarr);
+      HBITMAP map = CreateBitmap(cam.width, cam.height, 1, 32, (void*)pixelarr);
       SelectObject(src, map);
-      BitBlt(window, 0, 0, cam.height, cam.width, src,0,0,SRCCOPY );
+      BitBlt(window, 0, 0, cam.height, cam.width, src, 0, 0, SRCCOPY);
       free(pixelarr);
       DeleteObject(map);
       DeleteDC(src);
@@ -249,10 +258,11 @@ namespace world
       cam.camdir.raypoint[1].y = sinf(curangle);
       cam.camdir.raypoint[1].x = cosf(curangle);
       add_3dvect(cam.camdir.raypoint[1], cam.pos);
+      cam.camdir = unitvectorofray(cam.camdir);
     }
 
     //returns the color of the object the ray collides with else returns black;
-    color willraycollide(const ray &rays)
+    color willraycollide(const ray& rays)
     {
       ray increm = rays;
       for (tri curtri : triworld)
@@ -263,12 +273,12 @@ namespace world
           _3dvect adjustray = increm.raypoint[1];
           sub_3dvect(adjustray, increm.raypoint[0]);
           _3dvect adjustnorm = curtri.normal;
-          sub_3dvect(adjustnorm,curtri.tri[0]);
+          sub_3dvect(adjustnorm, curtri.tri[0]);
           float greyfact = normalizedot(adjustray, adjustnorm);
-          return {(int)(curtri.col.r*greyfact),(int)(curtri.col.g * greyfact),(int)(curtri.col.b * greyfact)};
+          return { (int)(curtri.col.r * greyfact),(int)(curtri.col.g * greyfact),(int)(curtri.col.b * greyfact) };
         }
       }
-      return {0, 0, 0};
+      return { 0, 0, 0 };
     }
   };
 }; // namespace world
